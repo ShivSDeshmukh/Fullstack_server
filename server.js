@@ -62,9 +62,11 @@ app.use("/images", (req, res, next) => {
 // Middleware
 
 app.use(cors()); // enable cors
-app.use(morgan("dev")); // enable morgan
+app.use(morgan("combined")); // enable morgan
 app.use(express.json()); // enable json
 app.use(express.urlencoded({ extended: true })); // enable urlencoded
+
+// Routes
 
 
 const app = express(); // create express instance
