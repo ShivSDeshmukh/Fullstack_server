@@ -111,6 +111,104 @@ app.get("/search", async (req, res) => {
     }
   });
 
+  app.get("/lessons", function (req, res, next) {
+    db.collection("lessons")
+      .find({})
+      .toArray()
+      .then((classes) => {
+        res.json(classes); // Send data as JSON
+      })
+      .catch((error) => {
+        console.error("Error fetching class activities:", error);
+        next(error); // Pass error to error-handling middleware
+      });
+  });
+  
+  app.post("/order", function (req, res, next) {
+    const orderData = req.body; // Receive the full orderData with orderInfo and lessonId
+  
+    const { orderInfo, lessonId } = orderData;
+  
+    // Validate lessonId to be an array
+    if (!lessonId.every((id) => ObjectId.isValid(id))) {
+      return res
+        .status(400)
+        .json({ error: "One or more lesson IDs are invalid." });
+    }
+  
+    // Log the order data for debugging purposes
+    console.log("Order received:", orderData);
+  
+    // Save the order data into the database
+    db.collection("order")
+      .insertOne({
+        orderInfo, // Save orderInfo separately
+        lessonId, // Save lessonId separately
+      })
+      .then((result) => {
+        res.status(201).json({
+          message: "Order placed successfully",
+          insertedId: result.insertedId,
+        });
+      })
+      .catch((error) => {
+        console.error("Error saving order:", error);
+        next(error);
+      });
+  });
+  
+  app.put("/updateLesson/:id", function (req, res, next) {
+    const lessonId = req.params.id;
+  
+    // Validate the lesson ID format
+    if (!ObjectId.isValid(lessonId)) {
+      return res.status(400).json({ error: "Invalid lesson ID." });
+    }
+  
+    const updatedData = req.body;
+  
+    // Check if the updated data is provided
+    if (!updatedData || Object.keys(updatedData).length === 0) {
+      return res.status(400).json({ error: "No data provided for update." });
+    }
+  
+    const lessons = db.collection("lessons");
+  
+    // Perform the update operation using promises
+    lessons
+      .updateOne({ _id: new ObjectId(lessonId) }, { $set: updatedData })
+      .then((result) => {
+        // Check if the lesson was updated successfully
+        if (result.modifiedCount > 0) {
+          res.json({ message: "Lesson updated successfully" });
+        } else {
+          res
+            .status(404)
+            .json({ error: "Lesson not found or no fields changed." });
+        }
+      })
+      .catch((error) => {
+        // Pass the error to the next error-handling middleware
+        next(error);
+      });
+  });
+  
+  // Middleware for error handling
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+      message: "Something went wrong!",
+      error: err.message || "Internal Server Error",
+    });
+  });
+  
+  // Start the server listening in port 8000
+  const PORT = process.env.PORT || 443;
+  app.listen(PORT, function () {
+    console.log(
+      `Server is running on https://vueappliaction-env.eba-qkd3evgp.eu-west-2.elasticbeanstalk.com/${PORT}`
+    );
+  });
 
 const app = express(); // create express instance
 const port = 3000; // port number  
