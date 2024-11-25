@@ -68,6 +68,49 @@ app.use(express.urlencoded({ extended: true })); // enable urlencoded
 
 // Routes
 
+app.get("/search", async (req, res) => {
+    const searchQuery = req.query.q; // Capture the query parameter
+  
+    if (!searchQuery) {
+      return res.status(400).json({ error: "Search query is required." });
+    }
+  
+    try {
+      const lessons = db.collection("lessons");
+  
+      // Perform a full-text search (ensure you created the correct text index)
+      const results = await lessons
+        .find({
+          $text: { $search: searchQuery }, // Full-text search using $text
+        })
+        .toArray();
+  
+      // If no results are found, fallback to regex search
+      if (results.length === 0) {
+        const regexResults = await lessons
+          .find({
+            $or: [
+              { subject: { $regex: searchQuery, $options: "i" } }, // Regex search on subject field
+              { location: { $regex: searchQuery, $options: "i" } },
+              // Regex search on location field
+            ],
+          })
+          .toArray();
+  
+        if (regexResults.length === 0) {
+          return res.status(404).json({ error: "No lessons found." });
+        }
+  
+        return res.json(regexResults); // Return regex-based results if found
+      }
+  
+      res.json(results); // Return full-text search results
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "An error occurred during the search." });
+    }
+  });
+
 
 const app = express(); // create express instance
 const port = 3000; // port number  
