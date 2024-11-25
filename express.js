@@ -6,6 +6,8 @@ const morgan = require("morgan");
 const path = require("path");
 const fs = require("fs");
 
+const app = express(); // create express instance
+
 let propertiesPath = path.resolve(__dirname, "fetch-server", "config", "db.properties");
 let properties = PropertiesReader(propertiesPath);
 let dbPrefix = properties.get("db.prefix");
@@ -210,5 +212,3 @@ app.get("/search", async (req, res) => {
     );
   });
 
-const app = express(); // create express instance
-const port = 3000; // port number  
