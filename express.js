@@ -8,18 +8,25 @@ const fs = require("fs");
 
 const app = express(); // create express instance
 
-let propertiesPath = path.resolve(__dirname, "fetch-server", "config", "db.properties");
+// Configure connection
+let propertiesPath = path.resolve(
+  __dirname,
+  "fetch-server",
+  "config",
+  "db.properties"
+);
 let properties = PropertiesReader(propertiesPath);
 let dbPrefix = properties.get("db.prefix");
 let dbUser = properties.get("db.user");
-let dbPwd = properties.get("db.pwd");
+let dbPwd = encodeURIComponent(properties.get("db.pwd"));
 let dbName = properties.get("db.dbName");
 let dbUrl = properties.get("db.dbUrl");
 let dbParams = properties.get("db.params");
 
-const uri = `${dbPrefix}${dbUser}:${dbPwd}${dbUrl}${dbParams}`; // create uri   // create uri
-let client = new MongoClient(uri, { serverApi: ServerApiVersion.v1}); // create mongo client
-let db = client.db(dbName); // create db
+// Constructing URI
+const uri = `${dbPrefix}${dbUser}:${dbPwd}${dbUrl}${dbParams}`;
+let client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
+let db = client.db(dbName);
 
 // Console log MongoDB connection status
 client
@@ -44,6 +51,7 @@ client
   });
 
 app.set("json spaces", 3);
+
 
 // Static file for lesson images with CORS headers
 const imagePath = path.resolve(__dirname, "images");
@@ -208,7 +216,7 @@ app.get("/search", async (req, res) => {
   const PORT = process.env.PORT || 443;
   app.listen(PORT, function () {
     console.log(
-      `Server is running on https://vueappliaction-env.eba-qkd3evgp.eu-west-2.elasticbeanstalk.com/${PORT}`
+      `Server is running on https://lessonsapp-env.eba-icve4xrr.eu-west-2.elasticbeanstalk.com//${PORT}`
     );
   });
 
